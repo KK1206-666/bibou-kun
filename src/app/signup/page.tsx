@@ -12,7 +12,6 @@ export default function SignupPage() {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -37,27 +36,8 @@ export default function SignupPage() {
       return
     }
 
-    setDone(true)
-  }
-
-  if (done) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center">
-          <div className="text-5xl mb-4">✉️</div>
-          <h2 className="text-xl font-bold mb-2">確認メールを送信しました</h2>
-          <p className="text-slate-400 text-sm mb-6">
-            {email} に届いたメールのリンクをクリックして登録を完了してください。
-          </p>
-          <Link
-            href="/login"
-            className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors"
-          >
-            ログイン画面へ
-          </Link>
-        </div>
-      </div>
-    )
+    router.push('/')
+    router.refresh()
   }
 
   return (
