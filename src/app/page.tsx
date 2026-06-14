@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Sortable from 'sortablejs'
 import { createClient } from '@/lib/supabase/client'
-import { type Todo, type TabType } from '@/types'
+import { type Todo, type TabType, COMPLETED_RETENTION_DAYS } from '@/types'
 import TodoForm from '@/components/TodoForm'
 import TodoItem from '@/components/TodoItem'
 import TabBar from '@/components/TabBar'
@@ -21,6 +22,7 @@ export default function DashboardPage() {
     const { data } = await supabase
       .from('todos')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
     setTodos((data as Todo[]) ?? [])
   }, [])
@@ -40,16 +42,63 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
+  // 完了タブ：完了済みのうち、直近COMPLETED_RETENTION_DAYS日以内のもの
+  // eslint-disable-next-line react-hooks/purity -- 表示期間の判定に現在時刻が必要
+  const cutoff = Date.now() - COMPLETED_RETENTION_DAYS * 24 * 60 * 60 * 1000
+  const completedRecent = todos
+    .filter((t) => !!t.is_completed && !!t.completed_at && new Date(t.completed_at).getTime() >= cutoff)
+    .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
+
+  // それ以外のタブ：未完了の備忘のみ
   const filtered = todos.filter((t) => {
+    if (t.is_completed) return false
     if (tab === 'all')     return !t.is_routine
     if (tab === 'work')    return !t.is_routine && t.type === 'work'
     if (tab === 'private') return !t.is_routine && t.type === 'private'
     if (tab === 'routine') return t.is_routine
-    return true
+    return false
   })
 
-  const active    = filtered.filter((t) => !t.is_completed)
-  const completed = filtered.filter((t) => t.is_completed)
+  const displayed = tab === 'completed' ? completedRecent : filtered
+
+  // 並び替え：ドラッグ後の順序をDBに保存する
+  const handleReorder = useCallback(async (newOrder: Todo[]) => {
+    setTodos((prev) => {
+      const orderMap = new Map(newOrder.map((todo, index) => [todo.id, index]))
+      return prev.map((t) =>
+        orderMap.has(t.id) ? { ...t, sort_order: orderMap.get(t.id)! } : t
+      )
+    })
+
+    const supabase = createClient()
+    await Promise.all(
+      newOrder.map((todo, index) =>
+        supabase.from('todos').update({ sort_order: index }).eq('id', todo.id)
+      )
+    )
+  }, [])
+
+  const listRef = useRef<HTMLDivElement>(null)
+
+  // 完了タブ以外でドラッグ並び替えを有効にする
+  useEffect(() => {
+    if (!listRef.current || tab === 'completed') return
+
+    const sortable = Sortable.create(listRef.current, {
+      animation: 150,
+      handle: '.drag-handle',
+      onEnd: (evt) => {
+        const { oldIndex, newIndex } = evt
+        if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return
+        const reordered = [...filtered]
+        const [moved] = reordered.splice(oldIndex, 1)
+        reordered.splice(newIndex, 0, moved)
+        handleReorder(reordered)
+      },
+    })
+
+    return () => sortable.destroy()
+  }, [tab, filtered, handleReorder])
 
   if (loading) {
     return (
@@ -84,30 +133,18 @@ export default function DashboardPage() {
         <TodoForm onCreated={fetchTodos} />
         <TabBar active={tab} onChange={setTab} />
 
-        {filtered.length === 0 ? (
+        {displayed.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-3">✨</div>
-            <p className="text-slate-400 text-sm">TODOはありません</p>
+            <p className="text-slate-400 text-sm">
+              {tab === 'completed' ? '完了した備忘はありません' : '備忘はありません'}
+            </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {active.length > 0 && (
-              <div className="space-y-2">
-                {active.map((todo) => (
-                  <TodoItem key={todo.id} todo={todo} onUpdated={fetchTodos} />
-                ))}
-              </div>
-            )}
-            {completed.length > 0 && (
-              <div>
-                <p className="text-xs text-slate-500 mb-2 px-1">完了済み（{completed.length}件）</p>
-                <div className="space-y-2">
-                  {completed.map((todo) => (
-                    <TodoItem key={todo.id} todo={todo} onUpdated={fetchTodos} />
-                  ))}
-                </div>
-              </div>
-            )}
+          <div ref={listRef} className="space-y-2">
+            {displayed.map((todo) => (
+              <TodoItem key={todo.id} todo={todo} onUpdated={fetchTodos} />
+            ))}
           </div>
         )}
       </div>

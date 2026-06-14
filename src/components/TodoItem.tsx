@@ -8,6 +8,7 @@ import {
   CATEGORY_COLORS,
   DAYS_OF_WEEK,
 } from '@/types'
+import EditTodoModal from './EditTodoModal'
 
 type Props = {
   todo: Todo
@@ -16,14 +17,19 @@ type Props = {
 
 export default function TodoItem({ todo, onUpdated }: Props) {
   const [loading, setLoading] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   // 完了/未完了を切り替え
   async function toggleComplete() {
     setLoading(true)
     const supabase = createClient()
+    const willComplete = !todo.is_completed
     await supabase
       .from('todos')
-      .update({ is_completed: !todo.is_completed })
+      .update({
+        is_completed: willComplete,
+        completed_at: willComplete ? new Date().toISOString() : null,
+      })
       .eq('id', todo.id)
     onUpdated()
     setLoading(false)
@@ -48,6 +54,16 @@ export default function TodoItem({ todo, onUpdated }: Props) {
     return `${labels} ${time}`
   }
 
+  // 期限の表示テキストと、期限切れかどうか
+  function formatDueDate(dueDate: string) {
+    const [, month, day] = dueDate.split('-')
+    return `${Number(month)}/${Number(day)}`
+  }
+
+  const isOverdue = !!todo.due_date
+    && !todo.is_completed
+    && todo.due_date < new Date().toISOString().slice(0, 10)
+
   const typeColor = todo.type === 'work'
     ? 'border-l-blue-500'
     : 'border-l-violet-500'
@@ -59,6 +75,14 @@ export default function TodoItem({ todo, onUpdated }: Props) {
       }`}
     >
       <div className="flex items-start gap-3">
+        {/* ドラッグハンドル */}
+        <div
+          className="drag-handle cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 text-base leading-none pt-0.5 select-none touch-none flex-shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          ⠿
+        </div>
+
         {/* チェックボックス */}
         <input
           type="checkbox"
@@ -68,8 +92,8 @@ export default function TodoItem({ todo, onUpdated }: Props) {
           className="mt-0.5 w-5 h-5 rounded cursor-pointer flex-shrink-0"
         />
 
-        {/* コンテンツ */}
-        <div className="flex-1 min-w-0">
+        {/* コンテンツ（タップで編集） */}
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setEditing(true)}>
           <div className="flex items-start justify-between gap-2">
             <p
               className={`text-sm font-medium leading-snug ${
@@ -79,19 +103,31 @@ export default function TodoItem({ todo, onUpdated }: Props) {
               {todo.title}
             </p>
 
-            {/* 削除ボタン */}
-            <button
-              onClick={deleteTodo}
-              disabled={loading}
-              className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0 text-lg leading-none"
-            >
-              ×
-            </button>
+            {/* 削除・完了ボタン */}
+            <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={deleteTodo}
+                disabled={loading}
+                className="text-slate-600 hover:text-red-400 transition-colors text-lg leading-none"
+              >
+                ×
+              </button>
+              <button
+                onClick={toggleComplete}
+                disabled={loading}
+                title={todo.is_completed ? '未完了に戻す' : '完了にする'}
+                className={`transition-colors text-base leading-none ${
+                  todo.is_completed ? 'text-emerald-400' : 'text-slate-600 hover:text-emerald-400'
+                }`}
+              >
+                ✓
+              </button>
+            </div>
           </div>
 
           {/* 説明 */}
           {todo.description && (
-            <p className="text-xs text-slate-500 mt-1">{todo.description}</p>
+            <p className="text-xs text-slate-500 mt-1 whitespace-pre-wrap">{todo.description}</p>
           )}
 
           {/* バッジ行 */}
@@ -124,6 +160,19 @@ export default function TodoItem({ todo, onUpdated }: Props) {
                 {CATEGORY_LABELS[todo.category]}
               </span>
             )}
+
+            {/* 期限バッジ */}
+            {todo.due_date && (
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  isOverdue
+                    ? 'bg-red-500/15 text-red-300'
+                    : 'bg-slate-500/15 text-slate-300'
+                }`}
+              >
+                ⏰ 期限 {formatDueDate(todo.due_date)}
+              </span>
+            )}
           </div>
 
           {/* リマインダー表示 */}
@@ -139,6 +188,11 @@ export default function TodoItem({ todo, onUpdated }: Props) {
           )}
         </div>
       </div>
+
+      {/* 編集モーダル */}
+      {editing && (
+        <EditTodoModal todo={todo} onClose={() => setEditing(false)} onUpdated={onUpdated} />
+      )}
     </div>
   )
 }

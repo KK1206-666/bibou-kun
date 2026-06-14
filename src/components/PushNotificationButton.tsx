@@ -46,11 +46,23 @@ async function subscribeAndSave() {
 }
 
 export default function PushNotificationButton() {
-  const [status, setStatus] = useState<'unknown' | 'granted' | 'denied' | 'unsupported'>('unknown')
+  const [status, setStatus] = useState<'unknown' | 'granted' | 'denied' | 'unsupported' | 'needs-install'>('unknown')
   const [loading, setLoading] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
 
   useEffect(() => {
+    // iOSのSafariはホーム画面に追加（PWAインストール）していないとPush通知が使えない
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    const isStandalone = (window.navigator as { standalone?: boolean }).standalone === true
+      || window.matchMedia('(display-mode: standalone)').matches
+
+    if (isIOS && !isStandalone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- ブラウザ環境の判定はマウント後にしか行えないため
+      setStatus('needs-install')
+      return
+    }
+
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setStatus('unsupported')
       return
@@ -92,6 +104,15 @@ export default function PushNotificationButton() {
   }
 
   if (status === 'unsupported') return null
+
+  if (status === 'needs-install') {
+    return (
+      <div className="text-xs text-amber-300 bg-amber-400/10 px-3 py-2 rounded-xl">
+        🔔 通知を有効にするには、共有ボタンから「ホーム画面に追加」してください（iPhone）
+      </div>
+    )
+  }
+
   if (status === 'granted') {
     return (
       <div className="flex flex-col gap-1">

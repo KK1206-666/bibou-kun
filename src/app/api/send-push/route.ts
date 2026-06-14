@@ -28,12 +28,20 @@ export async function POST(request: Request) {
   const currentDay  = dayNames[now.getDay()]
   const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
-  // リマインダーが設定されている未完了のTODOを取得
+  // YYYY-MM-DD形式の日付文字列を作成
+  const formatDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const today    = formatDate(now)
+  const tomorrow = formatDate(new Date(now.getTime() + 24 * 60 * 60 * 1000))
+
+  // 期限通知を送る時刻
+  const DUE_DATE_NOTIFY_TIMES = ['08:00', '12:00', '18:00', '21:00']
+
+  // 未完了のTODOを取得
   const { data: todos, error: todosError } = await supabase
     .from('todos')
-    .select('id, user_id, title, type, category, reminder_settings')
+    .select('id, user_id, title, type, category, reminder_settings, due_date, is_routine')
     .eq('is_completed', false)
-    .not('reminder_settings', 'is', null)
 
   console.log(`[send-push] currentDay=${currentDay} currentTime=${currentTime} todos=${todos?.length ?? 0} todosError=${todosError ? JSON.stringify(todosError) : 'none'}`)
 
@@ -44,16 +52,25 @@ export async function POST(request: Request) {
   let sentCount = 0
 
   for (const todo of todos) {
-    const settings = todo.reminder_settings as Array<{ days: string[]; time: string }>
+    const settings = (todo.reminder_settings ?? []) as Array<{ days: string[]; time: string }>
 
     // 今の時刻にマッチするリマインダーがあるか確認
-    const shouldNotify = settings.some((s) => {
+    const shouldNotifyReminder = settings.some((s) => {
       const timeMatch = s.time === currentTime
       const dayMatch  = s.days.length === 0 || s.days.includes(currentDay)
       return timeMatch && dayMatch
     })
 
-    console.log(`[send-push] todo=${todo.id} title=${todo.title} settings=${JSON.stringify(settings)} shouldNotify=${shouldNotify}`)
+    // 期限通知：期限の前日・当日の指定時刻にマッチするか確認（定常は対象外）
+    let dueDateMessage: string | null = null
+    if (!todo.is_routine && todo.due_date && DUE_DATE_NOTIFY_TIMES.includes(currentTime)) {
+      if (todo.due_date === today) dueDateMessage = '本日が期限です'
+      else if (todo.due_date === tomorrow) dueDateMessage = '明日が期限です'
+    }
+
+    const shouldNotify = shouldNotifyReminder || !!dueDateMessage
+
+    console.log(`[send-push] todo=${todo.id} title=${todo.title} settings=${JSON.stringify(settings)} dueDate=${todo.due_date} shouldNotify=${shouldNotify}`)
 
     if (!shouldNotify) continue
 
@@ -67,10 +84,11 @@ export async function POST(request: Request) {
 
     if (!subs || subs.length === 0) continue
 
-    // 通知メッセージを決定
-    const body = todo.type === 'private' && todo.category
-      ? CATEGORY_MESSAGES[todo.category as Category]
-      : CATEGORY_MESSAGES['other']
+    // 通知メッセージを決定（期限通知を優先）
+    const body = dueDateMessage
+      ?? (todo.type === 'private' && todo.category
+        ? CATEGORY_MESSAGES[todo.category as Category]
+        : CATEGORY_MESSAGES['other'])
 
     // 各デバイスに通知を送信
     for (const sub of subs) {

@@ -28,6 +28,9 @@ export type Todo = {
   category?: Category
   is_completed: boolean
   reminder_settings?: ReminderSetting[]
+  due_date?: string
+  completed_at?: string
+  sort_order: number
   created_at: string
 }
 
@@ -61,18 +64,22 @@ export const CATEGORY_MESSAGES: Record<Category, string> = {
   payment:     '支払い・振込の期日は大丈夫ですか？',
   housework:   'やるべき家事・タスクはありませんか？',
   gift:        'イベントやギフトの準備は進んでいますか？',
-  other:       'やり残しているTODOはありませんか？',
+  other:       'やり残している備忘はありませんか？',
 }
 
 // タブの定義
-export type TabType = 'all' | 'work' | 'private' | 'routine'
+export type TabType = 'all' | 'work' | 'private' | 'routine' | 'completed'
 
 export const TABS: { id: TabType; label: string }[] = [
-  { id: 'all',     label: 'すべて' },
-  { id: 'work',    label: '仕事' },
-  { id: 'private', label: 'プライベート' },
-  { id: 'routine', label: '定常' },
+  { id: 'all',       label: 'すべて' },
+  { id: 'work',      label: '仕事' },
+  { id: 'private',   label: 'プライベート' },
+  { id: 'routine',   label: '定常' },
+  { id: 'completed', label: '完了' },
 ]
+
+// 完了タブで表示する期間（日数）
+export const COMPLETED_RETENTION_DAYS = 14
 
 // 曜日の定義
 export const DAYS_OF_WEEK = [
