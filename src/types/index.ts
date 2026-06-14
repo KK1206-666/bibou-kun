@@ -32,6 +32,7 @@ export type Todo = {
   completed_at?: string
   sort_order: number
   created_at: string
+  notified_at?: string | null
 }
 
 // カテゴリーの日本語ラベル

@@ -70,10 +70,15 @@ export default function TodoItem({ todo, onUpdated }: Props) {
 
   return (
     <div
-      className={`bg-slate-900 border border-slate-800 border-l-2 ${typeColor} rounded-xl p-4 transition-opacity ${
+      className={`relative bg-slate-900 border border-slate-800 border-l-2 ${typeColor} rounded-xl p-4 transition-opacity ${
         todo.is_completed ? 'opacity-50' : ''
       }`}
     >
+      {/* 通知済みマーク */}
+      {todo.notified_at && (
+        <span className="absolute -left-1 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-950" />
+      )}
+
       <div className="flex items-start gap-3">
         {/* ドラッグハンドル */}
         <div

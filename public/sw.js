@@ -3,6 +3,17 @@
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (e) => e.waitUntil(clients.claim()))
 
+// アプリアイコンに未読通知件数のバッジを表示する
+async function updateAppBadge() {
+  if (!('setAppBadge' in navigator)) return
+  const notifications = await self.registration.getNotifications()
+  if (notifications.length > 0) {
+    await navigator.setAppBadge(notifications.length)
+  } else {
+    await navigator.clearAppBadge()
+  }
+}
+
 // Pushイベント：サーバーから通知を受信したときに表示
 self.addEventListener('push', (event) => {
   if (!event.data) return
@@ -16,7 +27,7 @@ self.addEventListener('push', (event) => {
       badge: data.badge || '/icon-192.png',
       vibrate: [200, 100, 200],
       requireInteraction: false,
-    })
+    }).then(() => updateAppBadge())
   )
 })
 
@@ -24,11 +35,14 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if ('focus' in client) return client.focus()
-      }
-      return clients.openWindow('/')
-    })
+    Promise.all([
+      updateAppBadge(),
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          if ('focus' in client) return client.focus()
+        }
+        return clients.openWindow('/')
+      }),
+    ])
   )
 })

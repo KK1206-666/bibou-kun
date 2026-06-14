@@ -91,6 +91,7 @@ export async function POST(request: Request) {
         : CATEGORY_MESSAGES['other'])
 
     // 各デバイスに通知を送信
+    let todoNotified = false
     for (const sub of subs) {
       try {
         await webpush.sendNotification(
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
           })
         )
         sentCount++
+        todoNotified = true
         console.log(`[send-push] sent to endpoint=${sub.endpoint.slice(0, 50)}...`)
       } catch (err) {
         // 無効なsubscriptionは削除
@@ -115,6 +117,14 @@ export async function POST(request: Request) {
           .delete()
           .eq('endpoint', sub.endpoint)
       }
+    }
+
+    // 通知済みのTODOには通知日時を記録する（アプリ側で赤丸表示に使用）
+    if (todoNotified) {
+      await supabase
+        .from('todos')
+        .update({ notified_at: new Date().toISOString() })
+        .eq('id', todo.id)
     }
   }
 

@@ -36,6 +36,38 @@ export default function DashboardPage() {
     })
   }, [fetchTodos, router])
 
+  // アプリを開いたらホーム画面アイコンの未読バッジを消す
+  useEffect(() => {
+    if ('clearAppBadge' in navigator) {
+      navigator.clearAppBadge().catch(() => {})
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.getNotifications().then((notifications) => {
+          notifications.forEach((n) => n.close())
+        })
+      })
+    }
+  }, [])
+
+  // アプリを閉じた（バックグラウンドに回した）タイミングで通知済みマークを消す
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState !== 'hidden') return
+
+      setTodos((prev) => {
+        if (!prev.some((t) => t.notified_at)) return prev
+        return prev.map((t) => (t.notified_at ? { ...t, notified_at: null } : t))
+      })
+
+      const supabase = createClient()
+      supabase.from('todos').update({ notified_at: null }).not('notified_at', 'is', null)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
@@ -60,6 +92,14 @@ export default function DashboardPage() {
   })
 
   const displayed = tab === 'completed' ? completedRecent : filtered
+
+  // タブごとの通知件数（未完了かつ通知済みのもの）
+  const notifyCounts: Partial<Record<TabType, number>> = {
+    all:     todos.filter((t) => !t.is_completed && !t.is_routine && t.notified_at).length,
+    work:    todos.filter((t) => !t.is_completed && !t.is_routine && t.type === 'work' && t.notified_at).length,
+    private: todos.filter((t) => !t.is_completed && !t.is_routine && t.type === 'private' && t.notified_at).length,
+    routine: todos.filter((t) => !t.is_completed && t.is_routine && t.notified_at).length,
+  }
 
   // 並び替え：ドラッグ後の順序をDBに保存する
   const handleReorder = useCallback(async (newOrder: Todo[]) => {
@@ -131,7 +171,7 @@ export default function DashboardPage() {
       <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
         <PushNotificationButton />
         <TodoForm onCreated={fetchTodos} />
-        <TabBar active={tab} onChange={setTab} />
+        <TabBar active={tab} onChange={setTab} notifyCounts={notifyCounts} />
 
         {displayed.length === 0 ? (
           <div className="text-center py-12">
