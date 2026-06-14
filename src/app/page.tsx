@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Sortable from 'sortablejs'
 import { createClient } from '@/lib/supabase/client'
-import { type Todo, type TabType, COMPLETED_RETENTION_DAYS } from '@/types'
+import { type Todo, type TabType, TABS, COMPLETED_RETENTION_DAYS } from '@/types'
 import TodoForm from '@/components/TodoForm'
 import TodoItem from '@/components/TodoItem'
 import TabBar from '@/components/TabBar'
@@ -122,6 +122,34 @@ export default function DashboardPage() {
 
   const listRef = useRef<HTMLDivElement>(null)
 
+  // 左右スワイプでタブを切り替える
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    const t = e.touches[0]
+    touchStartRef.current = { x: t.clientX, y: t.clientY }
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    const start = touchStartRef.current
+    touchStartRef.current = null
+    if (!start) return
+
+    const t = e.changedTouches[0]
+    const dx = t.clientX - start.x
+    const dy = t.clientY - start.y
+
+    // 横方向の移動が一定以上、かつ縦方向より大きい場合のみタブを切り替える
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return
+
+    const currentIndex = TABS.findIndex((tb) => tb.id === tab)
+    if (dx < 0 && currentIndex < TABS.length - 1) {
+      setTab(TABS[currentIndex + 1].id)
+    } else if (dx > 0 && currentIndex > 0) {
+      setTab(TABS[currentIndex - 1].id)
+    }
+  }
+
   // 完了タブ以外でドラッグ並び替えを有効にする
   useEffect(() => {
     if (!listRef.current || tab === 'completed') return
@@ -152,39 +180,47 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen pb-8">
-      <header className="sticky top-0 z-10 bg-slate-950/90 backdrop-blur border-b border-slate-800 px-4 py-3">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📋</span>
-            <span className="font-bold text-slate-100">備忘君</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 hidden sm:block">{userEmail}</span>
-            <div className="flex flex-col items-end gap-1">
-              <button
-                onClick={handleLogout}
-                className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
-              >
-                ログアウト
-              </button>
-              <button
-                onClick={() => setShowHelp(true)}
-                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-              >
-                📖 使い方
-              </button>
+      <div className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur border-b border-slate-800">
+        <header className="px-4 py-3">
+          <div className="max-w-lg mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">📋</span>
+              <span className="font-bold text-slate-100">備忘君</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500 hidden sm:block">{userEmail}</span>
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={handleLogout}
+                  className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  ログアウト
+                </button>
+                <button
+                  onClick={() => setShowHelp(true)}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  📖 使い方
+                </button>
+              </div>
             </div>
           </div>
+        </header>
+
+        <div className="max-w-lg mx-auto px-4 pb-3 space-y-3">
+          <PushNotificationButton />
+          <TodoForm onCreated={fetchTodos} />
+          <TabBar active={tab} onChange={setTab} notifyCounts={notifyCounts} />
         </div>
-      </header>
+      </div>
 
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
-      <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
-        <PushNotificationButton />
-        <TodoForm onCreated={fetchTodos} />
-        <TabBar active={tab} onChange={setTab} notifyCounts={notifyCounts} />
-
+      <div
+        className="max-w-lg mx-auto px-4 pt-4 space-y-4"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {displayed.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-3">✨</div>
