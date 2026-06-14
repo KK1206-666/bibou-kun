@@ -29,13 +29,13 @@ export async function POST(request: Request) {
   const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   // リマインダーが設定されている未完了のTODOを取得
-  const { data: todos } = await supabase
+  const { data: todos, error: todosError } = await supabase
     .from('todos')
     .select('id, user_id, title, type, category, reminder_settings')
     .eq('is_completed', false)
     .not('reminder_settings', 'is', null)
 
-  console.log(`[send-push] currentDay=${currentDay} currentTime=${currentTime} todos=${todos?.length ?? 0}`)
+  console.log(`[send-push] currentDay=${currentDay} currentTime=${currentTime} todos=${todos?.length ?? 0} todosError=${todosError ? JSON.stringify(todosError) : 'none'}`)
 
   if (!todos || todos.length === 0) {
     return NextResponse.json({ sent: 0 })
