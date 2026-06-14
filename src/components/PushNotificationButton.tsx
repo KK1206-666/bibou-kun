@@ -3,6 +3,39 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+// VAPID公開鍵をUint8Arrayに変換するヘルパー
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)))
+}
+
+// Service Workerを登録し、Push subscriptionをSupabaseに保存する
+async function subscribeAndSave() {
+  const registration = await navigator.serviceWorker.register('/sw.js')
+
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+    ),
+  })
+
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    await supabase.from('push_subscriptions').upsert({
+      user_id: user.id,
+      endpoint: subscription.endpoint,
+      keys: {
+        p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))),
+        auth:   btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))),
+      },
+    }, { onConflict: 'endpoint' })
+  }
+}
+
 export default function PushNotificationButton() {
   const [status, setStatus] = useState<'unknown' | 'granted' | 'denied' | 'unsupported'>('unknown')
   const [loading, setLoading] = useState(false)
@@ -12,8 +45,13 @@ export default function PushNotificationButton() {
       setStatus('unsupported')
       return
     }
-    if (Notification.permission === 'granted') setStatus('granted')
-    else if (Notification.permission === 'denied') setStatus('denied')
+    if (Notification.permission === 'granted') {
+      setStatus('granted')
+      // OS側は許可済みでも購読データが未保存の場合があるため、毎回同期する
+      subscribeAndSave().catch((err) => console.error('Push subscription sync failed:', err))
+    } else if (Notification.permission === 'denied') {
+      setStatus('denied')
+    }
   }, [])
 
   async function requestPermission() {
@@ -21,9 +59,6 @@ export default function PushNotificationButton() {
     setLoading(true)
 
     try {
-      // Service Workerを登録
-      const registration = await navigator.serviceWorker.register('/sw.js')
-
       // 通知許可をリクエスト
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
@@ -32,42 +67,13 @@ export default function PushNotificationButton() {
         return
       }
 
-      // Push subscriptionを取得
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-        ),
-      })
-
-      // Supabaseにsubscriptionを保存
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase.from('push_subscriptions').upsert({
-          user_id: user.id,
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))),
-            auth:   btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))),
-          },
-        }, { onConflict: 'endpoint' })
-      }
-
+      await subscribeAndSave()
       setStatus('granted')
     } catch (err) {
       console.error('Push notification setup failed:', err)
     }
 
     setLoading(false)
-  }
-
-  // VAPID公開鍵をUint8Arrayに変換するヘルパー
-  function urlBase64ToUint8Array(base64String: string) {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-    const rawData = window.atob(base64)
-    return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)))
   }
 
   if (status === 'unsupported') return null
