@@ -9,6 +9,7 @@ import TodoForm from '@/components/TodoForm'
 import TodoItem from '@/components/TodoItem'
 import TabBar from '@/components/TabBar'
 import PushNotificationButton from '@/components/PushNotificationButton'
+import HelpModal from '@/components/HelpModal'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -16,6 +17,7 @@ export default function DashboardPage() {
   const [tab, setTab] = useState<TabType>('all')
   const [userEmail, setUserEmail] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showHelp, setShowHelp] = useState(false)
 
   const fetchTodos = useCallback(async () => {
     const supabase = createClient()
@@ -158,15 +160,25 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs text-slate-500 hidden sm:block">{userEmail}</span>
-            <button
-              onClick={handleLogout}
-              className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              ログアウト
-            </button>
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={handleLogout}
+                className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                ログアウト
+              </button>
+              <button
+                onClick={() => setShowHelp(true)}
+                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
+                📖 使い方
+              </button>
+            </div>
           </div>
         </div>
       </header>
+
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
       <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
         <PushNotificationButton />
