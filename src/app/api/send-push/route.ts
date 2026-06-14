@@ -33,6 +33,8 @@ export async function POST(request: Request) {
     .eq('is_completed', false)
     .not('reminder_settings', 'is', null)
 
+  console.log(`[send-push] currentDay=${currentDay} currentTime=${currentTime} todos=${todos?.length ?? 0}`)
+
   if (!todos || todos.length === 0) {
     return NextResponse.json({ sent: 0 })
   }
@@ -49,6 +51,8 @@ export async function POST(request: Request) {
       return timeMatch && dayMatch
     })
 
+    console.log(`[send-push] todo=${todo.id} title=${todo.title} settings=${JSON.stringify(settings)} shouldNotify=${shouldNotify}`)
+
     if (!shouldNotify) continue
 
     // ユーザーのPush subscriptionsを取得
@@ -56,6 +60,8 @@ export async function POST(request: Request) {
       .from('push_subscriptions')
       .select('endpoint, keys')
       .eq('user_id', todo.user_id)
+
+    console.log(`[send-push] todo=${todo.id} subs=${subs?.length ?? 0}`)
 
     if (!subs || subs.length === 0) continue
 
@@ -80,8 +86,10 @@ export async function POST(request: Request) {
           })
         )
         sentCount++
-      } catch {
+        console.log(`[send-push] sent to endpoint=${sub.endpoint.slice(0, 50)}...`)
+      } catch (err) {
         // 無効なsubscriptionは削除
+        console.error(`[send-push] failed to send, deleting subscription: ${err instanceof Error ? err.message : String(err)}`)
         await supabase
           .from('push_subscriptions')
           .delete()
