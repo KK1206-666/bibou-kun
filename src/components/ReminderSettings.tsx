@@ -8,11 +8,12 @@ type Props = {
 }
 
 export default function ReminderSettings({ reminders, onChange }: Props) {
-  // リマインダーを追加（初期時刻は現在時刻）
+  // リマインダーを追加（初期時刻は現在時刻、初期曜日は今日の曜日）
   function addReminder() {
     const now = new Date()
     const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    onChange([...reminders, { days: [], time }])
+    const today = DAYS_OF_WEEK[now.getDay()].key
+    onChange([...reminders, { days: [today], time }])
   }
 
   // リマインダーを削除
