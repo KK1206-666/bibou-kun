@@ -124,12 +124,23 @@ export default function TodoFormFields({
       {!isRoutine && (
         <div>
           <label className="block text-xs text-slate-400 mb-1">期限（任意）</label>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => onDueDateChange(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
-          />
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => onDueDateChange(e.target.value)}
+              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+            />
+            {dueDate && (
+              <button
+                type="button"
+                onClick={() => onDueDateChange('')}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-4 rounded-xl transition-colors text-sm"
+              >
+                クリア
+              </button>
+            )}
+          </div>
         </div>
       )}
 
