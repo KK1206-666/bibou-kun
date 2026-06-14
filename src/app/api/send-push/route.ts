@@ -2,7 +2,7 @@
 // Supabase pg_cronからこのエンドポイントを呼び出す
 import { NextResponse } from 'next/server'
 import webpush from 'web-push'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { type Category, CATEGORY_MESSAGES } from '@/types'
 
 // このエンドポイントはCronからのみ呼ばれる（認証ヘッダーで保護）
@@ -18,7 +18,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = await createClient()
+  // cronからの呼び出しにはユーザーセッションが無いため、
+  // RLSをバイパスできるservice_roleクライアントを使う
+  const supabase = createAdminClient()
 
   // 現在の曜日と時刻を取得（日本時間）
   const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }))

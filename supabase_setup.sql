@@ -49,6 +49,9 @@ create table if not exists public.push_subscriptions (
   created_at timestamptz not null default now()
 );
 
+-- authenticatedロールにテーブルアクセス権限を付与（RLSとは別にSQLレベルの権限が必要）
+grant select, insert, update, delete on public.push_subscriptions to authenticated;
+
 -- RLSを有効化
 alter table public.push_subscriptions enable row level security;
 
@@ -59,6 +62,10 @@ create policy "push: 自分のデータを閲覧" on public.push_subscriptions
 -- 自分のsubscriptionのみ作成可能
 create policy "push: 自分のデータを作成" on public.push_subscriptions
   for insert with check (auth.uid() = user_id);
+
+-- 自分のsubscriptionのみ更新可能（upsertのonConflict時に必要）
+create policy "push: 自分のデータを更新" on public.push_subscriptions
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- 自分のsubscriptionのみ削除可能
 create policy "push: 自分のデータを削除" on public.push_subscriptions
