@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import AppIntro from '@/components/AppIntro'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -31,7 +32,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col items-center px-4 py-12">
       <div className="w-full max-w-sm">
         {/* ロゴ */}
         <div className="text-center mb-8">
@@ -88,6 +89,10 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
+      </div>
+
+      <div className="mt-14 w-full">
+        <AppIntro />
       </div>
     </div>
   )
