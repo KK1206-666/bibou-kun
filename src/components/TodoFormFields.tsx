@@ -169,8 +169,10 @@ export default function TodoFormFields({
         </div>
       )}
 
-      {/* リマインダー設定 */}
-      <ReminderSettings reminders={reminders} onChange={onRemindersChange} />
+      {/* リマインダー設定（定常TODOのみ。通常備忘は期限通知でカバーするため非表示） */}
+      {isRoutine && (
+        <ReminderSettings reminders={reminders} onChange={onRemindersChange} />
+      )}
     </>
   )
 }

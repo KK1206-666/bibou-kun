@@ -12,11 +12,34 @@ export type Category =
   | 'gift'
   | 'other'
 
-// 曜日と時間のリマインダー設定（1つのTODOに複数設定可能）
-export type ReminderSetting = {
-  days: string[] // ['Mon', 'Wed'] など。空配列は毎日
-  time: string   // 'HH:MM' 形式
+// 「毎週」パターン（既存）。biweekly=trueの場合はanchorDateを起点に2週間おきに通知
+export type WeeklyReminder = {
+  kind?: 'weekly'  // 省略時はweekly扱い（既存データとの後方互換のため）
+  days: string[]   // ['Mon', 'Wed'] など。空配列は毎日
+  time: string     // 'HH:MM' 形式
+  biweekly?: boolean
+  anchorDate?: string // 'YYYY-MM-DD'。biweekly=trueの時のみ使用
 }
+
+// 「月内の第n曜日」パターン（例：毎月最終金曜日、毎月第2月曜日）
+export type MonthlyWeekdayReminder = {
+  kind: 'monthlyWeekday'
+  ordinal: Ordinal
+  weekday: string // 'Sun'〜'Sat'
+  time: string
+}
+
+// 1つのTODOに複数設定可能なリマインダー（毎週系 or 月内の曜日系）
+export type ReminderSetting = WeeklyReminder | MonthlyWeekdayReminder
+
+export const ORDINALS = [
+  { key: 'first',  label: '第1' },
+  { key: 'second', label: '第2' },
+  { key: 'third',  label: '第3' },
+  { key: 'fourth', label: '第4' },
+  { key: 'last',   label: '最終' },
+] as const
+export type Ordinal = typeof ORDINALS[number]['key']
 
 export type Todo = {
   id: string

@@ -39,7 +39,7 @@ export default function TodoForm({ onCreated }: Props) {
       is_routine: isRoutine,
       category: type === 'private' ? category : null,
       due_date: !isRoutine && dueDate ? dueDate : null,
-      reminder_settings: reminders.length > 0 ? reminders : null,
+      reminder_settings: isRoutine && reminders.length > 0 ? reminders : null,
     })
 
     if (error) {

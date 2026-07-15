@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   type Todo,
+  type ReminderSetting,
   CATEGORY_LABELS,
   CATEGORY_COLORS,
   DAYS_OF_WEEK,
+  ORDINALS,
 } from '@/types'
 import EditTodoModal from './EditTodoModal'
 
@@ -46,12 +48,18 @@ export default function TodoItem({ todo, onUpdated }: Props) {
   }
 
   // リマインダーの表示テキスト
-  function formatReminder(days: string[], time: string) {
-    if (days.length === 0) return `毎日 ${time}`
-    const labels = days
+  function formatReminder(reminder: ReminderSetting) {
+    if (reminder.kind === 'monthlyWeekday') {
+      const ordinalLabel = ORDINALS.find((o) => o.key === reminder.ordinal)?.label ?? reminder.ordinal
+      const weekdayLabel = DAYS_OF_WEEK.find((w) => w.key === reminder.weekday)?.label ?? reminder.weekday
+      return `毎月${ordinalLabel}${weekdayLabel}曜日 ${reminder.time}`
+    }
+    const prefix = reminder.biweekly ? '隔週' : ''
+    if (reminder.days.length === 0) return `${prefix}毎日 ${reminder.time}`
+    const labels = reminder.days
       .map((d) => DAYS_OF_WEEK.find((w) => w.key === d)?.label ?? d)
       .join('・')
-    return `${labels} ${time}`
+    return `${prefix}${labels} ${reminder.time}`
   }
 
   // 期限の表示テキストと、期限切れかどうか
@@ -186,7 +194,7 @@ export default function TodoItem({ todo, onUpdated }: Props) {
               {todo.reminder_settings.map((r, i) => (
                 <div key={i} className="flex items-center gap-1 text-xs text-slate-500">
                   <span>🔔</span>
-                  <span>{formatReminder(r.days, r.time)}</span>
+                  <span>{formatReminder(r)}</span>
                 </div>
               ))}
             </div>

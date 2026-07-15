@@ -76,7 +76,12 @@ export default function HelpModal({ onClose }: Props) {
               <li><span className="text-slate-100">説明（任意）</span>：補足情報を記入できます。改行もそのまま保存されます</li>
               <li><span className="text-slate-100">期限（任意）</span>：日付を選ぶと期限バッジが表示されます。「クリア」ボタンで期限を削除できます（定常TODOには設定できません）</li>
               <li><span className="text-slate-100">カテゴリ（プライベートのみ）</span>：7種類から選択します</li>
-              <li><span className="text-slate-100">リマインダー通知（任意）</span>：「＋追加」で曜日・時刻を指定できます。曜日は初期状態で今日の曜日が選択されています。曜日を1つも選ばない場合は「毎日」その時刻に通知されます</li>
+              <li><span className="text-slate-100">リマインダー通知（任意・定常TODOのみ）</span>：「タスク分類」で定常TODOを選んだ場合のみ表示されます。2種類のパターンを追加できます
+                <ul className="list-disc pl-4 mt-1 space-y-1">
+                  <li><span className="text-slate-100">＋毎週/隔週</span>：曜日・時刻を指定します。曜日を1つも選ばない場合は「毎日」その時刻に通知されます。「隔週にする」をONにすると起点日を指定でき、その週を基準に2週間おきの通知になります</li>
+                  <li><span className="text-slate-100">＋月内の曜日</span>：「第1〜第4／最終」と曜日・時刻を指定します（例：毎月最終金曜日 18:00）。複数登録できます</li>
+                </ul>
+              </li>
             </ul>
           </Section>
 
@@ -92,8 +97,8 @@ export default function HelpModal({ onClose }: Props) {
             <ul className="list-disc pl-4 space-y-1">
               <li>画面上部の「通知を許可する」ボタンを押すと、ブラウザのPush通知が有効になります</li>
               <li><span className="text-slate-100">iPhone（Safari）の場合</span>：共有ボタン→「ホーム画面に追加」でアプリをインストールしないとPush通知を受け取れません。未対応の場合は案内メッセージが表示されます</li>
-              <li><span className="text-slate-100">リマインダー通知</span>：登録した曜日・時刻になると「📋タイトル」という通知が届きます</li>
-              <li><span className="text-slate-100">期限通知</span>：定常TODO以外で期限を設定した備忘について、<span className="text-slate-100">期限の前日と当日の 8:00 / 12:00 / 18:00 / 21:00</span> に「明日が期限です」「本日が期限です」という通知が届きます（1日4回まで）</li>
+              <li><span className="text-slate-100">リマインダー通知</span>：定常TODOに登録した曜日・時刻（毎週/隔週、または月内の曜日）になると「📋タイトル」という通知が届きます</li>
+              <li><span className="text-slate-100">期限通知</span>：定常TODO以外で期限を設定した備忘について、<span className="text-slate-100">期限の前日・当日・超過後</span>の 8:00 / 12:00 / 18:00 / 21:00 に「明日が期限です」「本日が期限です」「期限が超過しています」という通知が届きます（1日4回まで）。超過後は<span className="text-slate-100">完了にするまで毎日届き続けます</span></li>
             </ul>
           </Section>
 
@@ -111,7 +116,8 @@ export default function HelpModal({ onClose }: Props) {
               <li>Push通知にはブラウザ・OS側の通知許可が必要です</li>
               <li>iPhoneはホーム画面に追加（PWAインストール）しないとPush通知を受け取れません</li>
               <li>完了した備忘は「完了」タブで直近14日間のみ確認でき、それ以降は自動的に削除されます</li>
-              <li>期限通知は定常TODO以外が対象です（定常TODOには期限を設定できません）</li>
+              <li>期限通知は定常TODO以外が対象です（定常TODOには期限を設定できません）。期限超過後は完了にするまで通知が続きます</li>
+              <li>リマインダー通知は定常TODOのみ設定できます（通常備忘は期限通知でカバーするため設定欄が表示されません）</li>
               <li>通知バッジ（アイコン・赤丸）はBadging APIに対応したブラウザ・OSでのみ表示されます</li>
             </ul>
           </Section>
