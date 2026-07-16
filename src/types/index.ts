@@ -29,8 +29,15 @@ export type MonthlyWeekdayReminder = {
   time: string
 }
 
-// 1つのTODOに複数設定可能なリマインダー（毎週系 or 月内の曜日系）
-export type ReminderSetting = WeeklyReminder | MonthlyWeekdayReminder
+// 「毎月●日」パターン（例：毎月15日、毎月末日）。その日が存在しない月は末日に繰り下げる
+export type MonthlyDayReminder = {
+  kind: 'monthlyDay'
+  day: number | 'last' // 1〜31、または「末日」
+  time: string
+}
+
+// 1つのTODOに複数設定可能なリマインダー（毎週系 or 月内の曜日系 or 毎月●日系）
+export type ReminderSetting = WeeklyReminder | MonthlyWeekdayReminder | MonthlyDayReminder
 
 export const ORDINALS = [
   { key: 'first',  label: '第1' },

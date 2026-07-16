@@ -1,6 +1,6 @@
 'use client'
 
-import { DAYS_OF_WEEK, ORDINALS, type ReminderSetting, type WeeklyReminder, type MonthlyWeekdayReminder } from '@/types'
+import { DAYS_OF_WEEK, ORDINALS, type ReminderSetting, type WeeklyReminder, type MonthlyWeekdayReminder, type MonthlyDayReminder } from '@/types'
 
 type Props = {
   reminders: ReminderSetting[]
@@ -36,13 +36,20 @@ export default function ReminderSettings({ reminders, onChange }: Props) {
     onChange([...reminders, reminder])
   }
 
+  // 「毎月●日」パターンを追加（初期値は今日の日）
+  function addMonthlyDay() {
+    const now = new Date()
+    const reminder: MonthlyDayReminder = { kind: 'monthlyDay', day: now.getDate(), time: currentTime() }
+    onChange([...reminders, reminder])
+  }
+
   // リマインダーを削除
   function removeReminder(index: number) {
     onChange(reminders.filter((_, i) => i !== index))
   }
 
   // 任意のフィールドを更新
-  function updateReminder(index: number, patch: Partial<WeeklyReminder> & Partial<MonthlyWeekdayReminder>) {
+  function updateReminder(index: number, patch: Partial<WeeklyReminder> & Partial<MonthlyWeekdayReminder> & Partial<MonthlyDayReminder>) {
     const updated = reminders.map((r, i) => (i === index ? { ...r, ...patch } : r))
     onChange(updated as ReminderSetting[])
   }
@@ -74,6 +81,13 @@ export default function ReminderSettings({ reminders, onChange }: Props) {
             className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded-lg transition-colors"
           >
             ＋ 月内の曜日
+          </button>
+          <button
+            type="button"
+            onClick={addMonthlyDay}
+            className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded-lg transition-colors"
+          >
+            ＋ 毎月●日
           </button>
         </div>
       </div>
@@ -131,6 +145,47 @@ export default function ReminderSettings({ reminders, onChange }: Props) {
                     className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
+              </div>
+            )
+          }
+
+          if (reminder.kind === 'monthlyDay') {
+            const r = reminder as MonthlyDayReminder
+            return (
+              <div key={index} className="bg-slate-800 rounded-xl p-3 border border-slate-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-indigo-300 font-medium">毎月●日</span>
+                  <button
+                    type="button"
+                    onClick={() => removeReminder(index)}
+                    className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    削除
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={String(r.day)}
+                    onChange={(e) => updateReminder(index, { day: e.target.value === 'last' ? 'last' : Number(e.target.value) })}
+                    className="bg-slate-700 border border-slate-600 rounded-lg px-2 py-1.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                  >
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>{d}日</option>
+                    ))}
+                    <option value="last">末日</option>
+                  </select>
+
+                  <input
+                    type="time"
+                    value={r.time}
+                    onChange={(e) => updateReminder(index, { time: e.target.value })}
+                    className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                {typeof r.day === 'number' && (
+                  <p className="text-xs text-slate-500 mt-2">※その月に{r.day}日が無い場合は、末日に繰り下げて通知します</p>
+                )}
               </div>
             )
           }

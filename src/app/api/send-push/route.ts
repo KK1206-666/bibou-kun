@@ -24,6 +24,13 @@ function getMonthlyWeekdayDate(year: number, monthIndex: number, weekday: number
   return date.getMonth() === monthIndex ? date : null
 }
 
+// 指定月における「毎月●日」の日付を返す。その日が存在しない月は末日に繰り下げる
+function getMonthlyDayDate(year: number, monthIndex: number, day: number | 'last'): Date {
+  const lastDayOfMonth = new Date(year, monthIndex + 1, 0).getDate()
+  const targetDay = day === 'last' ? lastDayOfMonth : Math.min(day, lastDayOfMonth)
+  return new Date(year, monthIndex, targetDay)
+}
+
 // 期限日+期限時刻から指定分前の日付・時刻を計算する（日付をまたぐ場合も自動的に正しく計算される）
 function timeBeforeDue(dueDate: string, dueTime: string, minutesBefore: number): { date: string; time: string } {
   const [y, mo, d] = dueDate.split('-').map(Number)
@@ -53,6 +60,13 @@ function reminderMatches(reminder: ReminderSetting, now: Date, currentDay: strin
     const weekday = WEEKDAY_INDEX[reminder.weekday]
     const target = getMonthlyWeekdayDate(now.getFullYear(), now.getMonth(), weekday, reminder.ordinal)
     if (!target) return false
+    return target.getFullYear() === now.getFullYear()
+      && target.getMonth() === now.getMonth()
+      && target.getDate() === now.getDate()
+  }
+
+  if (reminder.kind === 'monthlyDay') {
+    const target = getMonthlyDayDate(now.getFullYear(), now.getMonth(), reminder.day)
     return target.getFullYear() === now.getFullYear()
       && target.getMonth() === now.getMonth()
       && target.getDate() === now.getDate()

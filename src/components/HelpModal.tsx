@@ -76,10 +76,11 @@ export default function HelpModal({ onClose }: Props) {
               <li><span className="text-slate-100">説明（任意）</span>：補足情報を記入できます。改行もそのまま保存されます</li>
               <li><span className="text-slate-100">期限（任意）</span>：日付を選ぶと期限バッジが表示されます。「クリア」ボタンで期限を削除できます（定常備忘には設定できません）。日付を選んだ後に「時間」をONにすると時刻も設定でき、期限バッジに時刻が併記されます。時刻を設定すると、その1時間前・10分前にも通知が届きます</li>
               <li><span className="text-slate-100">カテゴリ（プライベートのみ）</span>：7種類から選択します</li>
-              <li><span className="text-slate-100">リマインダー通知（任意・定常備忘のみ）</span>：「タスク分類」で定常備忘を選んだ場合のみ表示されます。2種類のパターンを追加できます
+              <li><span className="text-slate-100">リマインダー通知（任意・定常備忘のみ）</span>：「タスク分類」で定常備忘を選んだ場合のみ表示されます。3種類のパターンを追加できます
                 <ul className="list-disc pl-4 mt-1 space-y-1">
                   <li><span className="text-slate-100">＋毎週/隔週</span>：曜日・時刻を指定します。曜日を1つも選ばない場合は「毎日」その時刻に通知されます。「隔週にする」をONにすると起点日を指定でき、その週を基準に2週間おきの通知になります</li>
                   <li><span className="text-slate-100">＋月内の曜日</span>：「第1〜第4／最終」と曜日・時刻を指定します（例：毎月最終金曜日 18:00）。複数登録できます</li>
+                  <li><span className="text-slate-100">＋毎月●日</span>：「1〜31日」または「末日」と時刻を指定します（例：毎月15日 9:00）。その日がない月（例：2月31日）は末日に繰り下げて通知します。複数登録できます</li>
                 </ul>
               </li>
             </ul>

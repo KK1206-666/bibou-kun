@@ -54,6 +54,10 @@ export default function TodoItem({ todo, onUpdated }: Props) {
       const weekdayLabel = DAYS_OF_WEEK.find((w) => w.key === reminder.weekday)?.label ?? reminder.weekday
       return `毎月${ordinalLabel}${weekdayLabel}曜日 ${reminder.time}`
     }
+    if (reminder.kind === 'monthlyDay') {
+      const dayLabel = reminder.day === 'last' ? '末日' : `${reminder.day}日`
+      return `毎月${dayLabel} ${reminder.time}`
+    }
     const prefix = reminder.biweekly ? '隔週' : ''
     if (reminder.days.length === 0) return `${prefix}毎日 ${reminder.time}`
     const labels = reminder.days
