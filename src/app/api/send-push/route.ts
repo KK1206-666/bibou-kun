@@ -24,6 +24,17 @@ function getMonthlyWeekdayDate(year: number, monthIndex: number, weekday: number
   return date.getMonth() === monthIndex ? date : null
 }
 
+// 期限日+期限時刻から指定分前の日付・時刻を計算する（日付をまたぐ場合も自動的に正しく計算される）
+function timeBeforeDue(dueDate: string, dueTime: string, minutesBefore: number): { date: string; time: string } {
+  const [y, mo, d] = dueDate.split('-').map(Number)
+  const [h, mi] = dueTime.split(':').map(Number)
+  const dt = new Date(y, mo - 1, d, h, mi)
+  dt.setMinutes(dt.getMinutes() - minutesBefore)
+  const date = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+  const time = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`
+  return { date, time }
+}
+
 // 隔週リマインダー：起点日から数えて何週目かを判定し、偶数週（0, 2, 4週目...）のみ通知
 function isBiweeklyOnWeek(anchorDate: string, now: Date): boolean {
   const [ay, am, ad] = anchorDate.split('-').map(Number)
@@ -90,7 +101,7 @@ export async function POST(request: Request) {
   // 未完了のTODOを取得
   const { data: todos, error: todosError } = await supabase
     .from('todos')
-    .select('id, user_id, title, type, category, reminder_settings, due_date, is_routine')
+    .select('id, user_id, title, type, category, reminder_settings, due_date, due_time, is_routine')
     .eq('is_completed', false)
 
   console.log(`[send-push] currentDay=${currentDay} currentTime=${currentTime} todos=${todos?.length ?? 0} todosError=${todosError ? JSON.stringify(todosError) : 'none'}`)
@@ -115,9 +126,24 @@ export async function POST(request: Request) {
       else if (todo.due_date < today) dueDateMessage = '期限が超過しています'
     }
 
-    const shouldNotify = shouldNotifyReminder || !!dueDateMessage
+    // 期限時刻通知：期限の1時間前・10分前にマッチするか確認（時間を設定した備忘のみ）
+    let dueTimeMessage: string | null = null
+    if (!todo.is_routine && todo.due_date && todo.due_time) {
+      const oneHourBefore = timeBeforeDue(todo.due_date, todo.due_time, 60)
+      const tenMinBefore = timeBeforeDue(todo.due_date, todo.due_time, 10)
+      if (oneHourBefore.date === today && oneHourBefore.time === currentTime) {
+        dueTimeMessage = 'まもなく期限です（1時間前）'
+      } else if (tenMinBefore.date === today && tenMinBefore.time === currentTime) {
+        dueTimeMessage = 'まもなく期限です（10分前）'
+      }
+    }
 
-    console.log(`[send-push] todo=${todo.id} title=${todo.title} settings=${JSON.stringify(settings)} dueDate=${todo.due_date} shouldNotify=${shouldNotify}`)
+    // 同じ分に両方の条件が重なった場合は、期限時刻通知（1時間前・10分前）を優先する
+    const dueMessage = dueTimeMessage ?? dueDateMessage
+
+    const shouldNotify = shouldNotifyReminder || !!dueMessage
+
+    console.log(`[send-push] todo=${todo.id} title=${todo.title} settings=${JSON.stringify(settings)} dueDate=${todo.due_date} dueTime=${todo.due_time} shouldNotify=${shouldNotify}`)
 
     if (!shouldNotify) continue
 
@@ -131,8 +157,8 @@ export async function POST(request: Request) {
 
     if (!subs || subs.length === 0) continue
 
-    // 通知メッセージを決定（期限通知を優先）
-    const body = dueDateMessage
+    // 通知メッセージを決定（期限時刻通知 → 期限通知 → カテゴリ別メッセージの順で優先）
+    const body = dueMessage
       ?? (todo.type === 'private' && todo.category
         ? CATEGORY_MESSAGES[todo.category as Category]
         : CATEGORY_MESSAGES['other'])

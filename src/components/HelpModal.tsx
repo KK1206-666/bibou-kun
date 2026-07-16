@@ -74,7 +74,7 @@ export default function HelpModal({ onClose }: Props) {
               <li><span className="text-slate-100">タスク分類</span>：「備忘」か「定常備忘（繰り返し）」を選択します</li>
               <li><span className="text-slate-100">タイトル</span>：必須項目です</li>
               <li><span className="text-slate-100">説明（任意）</span>：補足情報を記入できます。改行もそのまま保存されます</li>
-              <li><span className="text-slate-100">期限（任意）</span>：日付を選ぶと期限バッジが表示されます。「クリア」ボタンで期限を削除できます（定常備忘には設定できません）。日付を選んだ後に「時間」をONにすると時刻も設定でき、期限バッジに時刻が併記されます（表示用の情報で、通知のタイミングには影響しません）</li>
+              <li><span className="text-slate-100">期限（任意）</span>：日付を選ぶと期限バッジが表示されます。「クリア」ボタンで期限を削除できます（定常備忘には設定できません）。日付を選んだ後に「時間」をONにすると時刻も設定でき、期限バッジに時刻が併記されます。時刻を設定すると、その1時間前・10分前にも通知が届きます</li>
               <li><span className="text-slate-100">カテゴリ（プライベートのみ）</span>：7種類から選択します</li>
               <li><span className="text-slate-100">リマインダー通知（任意・定常備忘のみ）</span>：「タスク分類」で定常備忘を選んだ場合のみ表示されます。2種類のパターンを追加できます
                 <ul className="list-disc pl-4 mt-1 space-y-1">
@@ -98,7 +98,8 @@ export default function HelpModal({ onClose }: Props) {
               <li>画面上部の「通知を許可する」ボタンを押すと、ブラウザのPush通知が有効になります</li>
               <li><span className="text-slate-100">iPhone（Safari）の場合</span>：共有ボタン→「ホーム画面に追加」でアプリをインストールしないとPush通知を受け取れません。未対応の場合は案内メッセージが表示されます</li>
               <li><span className="text-slate-100">リマインダー通知</span>：定常備忘に登録した曜日・時刻（毎週/隔週、または月内の曜日）になると「📋タイトル」という通知が届きます</li>
-              <li><span className="text-slate-100">期限通知</span>：定常備忘以外で期限を設定した備忘について、<span className="text-slate-100">期限の前日・当日・超過後</span>の 8:00 / 12:00 / 18:00 / 21:00 に「明日が期限です」「本日が期限です」「期限が超過しています」という通知が届きます（1日4回まで）。超過後は<span className="text-slate-100">完了にするまで毎日届き続けます</span>。期限に設定した時刻は表示用で、通知タイミングには影響しません</li>
+              <li><span className="text-slate-100">期限通知</span>：定常備忘以外で期限を設定した備忘について、<span className="text-slate-100">期限の前日・当日・超過後</span>の 8:00 / 12:00 / 18:00 / 21:00 に「明日が期限です」「本日が期限です」「期限が超過しています」という通知が届きます（1日4回まで）。超過後は<span className="text-slate-100">完了にするまで毎日届き続けます</span></li>
+              <li><span className="text-slate-100">期限時刻の通知</span>：期限の「時間」まで設定した備忘には、上記に加えて<span className="text-slate-100">期限時刻の1時間前・10分前</span>にも「まもなく期限です」という通知が届きます。同じ分に前日・当日の通知と重なった場合はこちらが優先されます</li>
             </ul>
           </Section>
 
@@ -118,7 +119,7 @@ export default function HelpModal({ onClose }: Props) {
               <li>完了した備忘は「完了」タブで直近14日間のみ確認でき、それ以降は自動的に削除されます</li>
               <li>期限通知は定常備忘以外が対象です（定常備忘には期限を設定できません）。期限超過後は完了にするまで通知が続きます</li>
               <li>リマインダー通知は定常備忘のみ設定できます（備忘は期限通知でカバーするため設定欄が表示されません）</li>
-              <li>期限の「時間」で設定した時刻は表示用の情報です。通知は日付ベースのタイミング（前日・当日・超過後）で届きます</li>
+              <li>期限の「時間」を設定すると、日付ベースの通知（前日・当日・超過後）に加えて、その時刻の1時間前・10分前にも通知が届きます</li>
               <li>通知バッジ（アイコン・赤丸）はBadging APIに対応したブラウザ・OSでのみ表示されます</li>
             </ul>
           </Section>
