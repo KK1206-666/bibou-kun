@@ -7,6 +7,12 @@ import {
 } from '@/types'
 import ReminderSettings from './ReminderSettings'
 
+// 現在時刻を'HH:MM'形式で取得（「時間」トグルON時の初期値に使用）
+function currentTime() {
+  const now = new Date()
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+}
+
 const CATEGORIES: { value: Category; label: string; emoji: string }[] = [
   { value: 'shopping',    label: '買い物',          emoji: '🛒' },
   { value: 'reservation', label: '予約',            emoji: '📅' },
@@ -28,6 +34,8 @@ type Props = {
   onDescriptionChange: (description: string) => void
   dueDate: string
   onDueDateChange: (dueDate: string) => void
+  dueTime: string
+  onDueTimeChange: (dueTime: string) => void
   category: Category
   onCategoryChange: (category: Category) => void
   reminders: ReminderSetting[]
@@ -41,6 +49,7 @@ export default function TodoFormFields({
   title, onTitleChange,
   description, onDescriptionChange,
   dueDate, onDueDateChange,
+  dueTime, onDueTimeChange,
   category, onCategoryChange,
   reminders, onRemindersChange,
 }: Props) {
@@ -74,8 +83,8 @@ export default function TodoFormFields({
         <label className="block text-xs text-slate-400 mb-2">タスク分類</label>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { value: false, label: '通常備忘' },
-            { value: true,  label: '定常TODO' },
+            { value: false, label: '備忘' },
+            { value: true,  label: '定常備忘' },
           ].map(({ value, label }) => (
             <button
               key={String(value)}
@@ -134,13 +143,36 @@ export default function TodoFormFields({
             {dueDate && (
               <button
                 type="button"
-                onClick={() => onDueDateChange('')}
+                onClick={() => { onDueDateChange(''); onDueTimeChange('') }}
                 className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-4 rounded-xl transition-colors text-sm"
               >
                 クリア
               </button>
             )}
           </div>
+
+          {/* 時間トグル（表示用の時刻。通知タイミングには影響しない） */}
+          {dueDate && (
+            <div className="flex items-center gap-2 mt-2">
+              <label className="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!dueTime}
+                  onChange={(e) => onDueTimeChange(e.target.checked ? currentTime() : '')}
+                  className="w-3.5 h-3.5"
+                />
+                時間
+              </label>
+              {dueTime && (
+                <input
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => onDueTimeChange(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                />
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -169,7 +201,7 @@ export default function TodoFormFields({
         </div>
       )}
 
-      {/* リマインダー設定（定常TODOのみ。通常備忘は期限通知でカバーするため非表示） */}
+      {/* リマインダー設定（定常備忘のみ。備忘は期限通知でカバーするため非表示） */}
       {isRoutine && (
         <ReminderSettings reminders={reminders} onChange={onRemindersChange} />
       )}

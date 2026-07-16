@@ -23,6 +23,7 @@ export default function EditTodoModal({ todo, onClose, onUpdated }: Props) {
   const [description, setDescription] = useState(todo.description ?? '')
   const [category, setCategory] = useState<Category>(todo.category ?? 'other')
   const [dueDate, setDueDate] = useState(todo.due_date ?? '')
+  const [dueTime, setDueTime] = useState(todo.due_time ?? '')
   const [reminders, setReminders] = useState<ReminderSetting[]>(todo.reminder_settings ?? [])
   const [appendText, setAppendText] = useState('')
   const [loading, setLoading] = useState(false)
@@ -53,6 +54,7 @@ export default function EditTodoModal({ todo, onClose, onUpdated }: Props) {
         is_routine: isRoutine,
         category: type === 'private' ? category : null,
         due_date: !isRoutine && dueDate ? dueDate : null,
+        due_time: !isRoutine && dueDate && dueTime ? dueTime : null,
         reminder_settings: isRoutine && reminders.length > 0 ? reminders : null,
       })
       .eq('id', todo.id)
@@ -94,6 +96,7 @@ export default function EditTodoModal({ todo, onClose, onUpdated }: Props) {
             title={title} onTitleChange={setTitle}
             description={description} onDescriptionChange={setDescription}
             dueDate={dueDate} onDueDateChange={setDueDate}
+            dueTime={dueTime} onDueTimeChange={setDueTime}
             category={category} onCategoryChange={setCategory}
             reminders={reminders} onRemindersChange={setReminders}
           />

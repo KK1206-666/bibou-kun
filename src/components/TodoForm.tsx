@@ -21,6 +21,7 @@ export default function TodoForm({ onCreated }: Props) {
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<Category>('other')
   const [dueDate, setDueDate] = useState('')
+  const [dueTime, setDueTime] = useState('')
   const [reminders, setReminders] = useState<ReminderSetting[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -39,6 +40,7 @@ export default function TodoForm({ onCreated }: Props) {
       is_routine: isRoutine,
       category: type === 'private' ? category : null,
       due_date: !isRoutine && dueDate ? dueDate : null,
+      due_time: !isRoutine && dueDate && dueTime ? dueTime : null,
       reminder_settings: isRoutine && reminders.length > 0 ? reminders : null,
     })
 
@@ -55,6 +57,7 @@ export default function TodoForm({ onCreated }: Props) {
     setIsRoutine(false)
     setCategory('other')
     setDueDate('')
+    setDueTime('')
     setReminders([])
     setOpen(false)
     onCreated()
@@ -87,6 +90,7 @@ export default function TodoForm({ onCreated }: Props) {
               title={title} onTitleChange={setTitle}
               description={description} onDescriptionChange={setDescription}
               dueDate={dueDate} onDueDateChange={setDueDate}
+              dueTime={dueTime} onDueTimeChange={setDueTime}
               category={category} onCategoryChange={setCategory}
               reminders={reminders} onRemindersChange={setReminders}
             />

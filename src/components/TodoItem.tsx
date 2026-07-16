@@ -183,7 +183,7 @@ export default function TodoItem({ todo, onUpdated }: Props) {
                     : 'bg-slate-500/15 text-slate-300'
                 }`}
               >
-                ⏰ 期限 {formatDueDate(todo.due_date)}
+                ⏰ 期限 {formatDueDate(todo.due_date)}{todo.due_time ? ` ${todo.due_time}` : ''}
               </span>
             )}
           </div>

@@ -142,3 +142,9 @@ select cron.schedule(
 
 -- ジョブを削除したい場合
 -- select cron.unschedule('cleanup-completed-todos');
+
+-- ============================================
+-- 6. 備忘の期限に時刻を追加（マイグレーション）
+-- 表示専用の時刻（通知タイミングには影響しない）
+-- ============================================
+alter table public.todos add column if not exists due_time time;

@@ -53,7 +53,7 @@ export default function HelpModal({ onClose }: Props) {
               <li><span className="text-slate-100">カードの本文をタップ</span>：編集モーダルが開きます</li>
               <li><span className="text-slate-100">右上の ×</span>：その備忘を削除します（確認メッセージが表示されます）</li>
               <li><span className="text-slate-100">💼仕事 / 🏠プライベート</span>：登録時に選んだタイプを表示するバッジです</li>
-              <li><span className="text-slate-100">🔁定常</span>：繰り返し登録した「定常TODO」であることを示すバッジです</li>
+              <li><span className="text-slate-100">🔁定常</span>：繰り返し登録した「定常備忘」であることを示すバッジです</li>
               <li><span className="text-slate-100">カテゴリバッジ</span>：プライベートのTODOにのみ表示される分類（買い物・予約など7種類）です</li>
               <li><span className="text-slate-100">⏰期限バッジ</span>：設定した期限日。期限を過ぎると赤色で表示されます</li>
             </ul>
@@ -62,8 +62,8 @@ export default function HelpModal({ onClose }: Props) {
           <Section title="② タブの見方">
             <ul className="list-disc pl-4 space-y-1">
               <li><span className="text-slate-100">すべて</span>：定常以外の未完了の備忘を表示します</li>
-              <li><span className="text-slate-100">仕事 / プライベート</span>：タイプ別の未完了の備忘を表示します（定常TODOは含みません）</li>
-              <li><span className="text-slate-100">定常</span>：「定常TODO」として登録した繰り返しタスクを、仕事・プライベートの区別なく表示します</li>
+              <li><span className="text-slate-100">仕事 / プライベート</span>：タイプ別の未完了の備忘を表示します（定常備忘は含みません）</li>
+              <li><span className="text-slate-100">定常</span>：「定常備忘」として登録した繰り返しタスクを、仕事・プライベートの区別なく表示します</li>
               <li><span className="text-slate-100">完了</span>：完了にした備忘のうち直近14日以内のものを表示します。14日を過ぎたものは自動的に削除されます</li>
             </ul>
           </Section>
@@ -71,12 +71,12 @@ export default function HelpModal({ onClose }: Props) {
           <Section title="③ 備忘を登録する">
             <ul className="list-disc pl-4 space-y-1">
               <li><span className="text-slate-100">タイプ</span>：仕事 / プライベート から選択します</li>
-              <li><span className="text-slate-100">タスク分類</span>：「通常備忘」か「定常TODO（繰り返し）」を選択します</li>
+              <li><span className="text-slate-100">タスク分類</span>：「備忘」か「定常備忘（繰り返し）」を選択します</li>
               <li><span className="text-slate-100">タイトル</span>：必須項目です</li>
               <li><span className="text-slate-100">説明（任意）</span>：補足情報を記入できます。改行もそのまま保存されます</li>
-              <li><span className="text-slate-100">期限（任意）</span>：日付を選ぶと期限バッジが表示されます。「クリア」ボタンで期限を削除できます（定常TODOには設定できません）</li>
+              <li><span className="text-slate-100">期限（任意）</span>：日付を選ぶと期限バッジが表示されます。「クリア」ボタンで期限を削除できます（定常備忘には設定できません）。日付を選んだ後に「時間」をONにすると時刻も設定でき、期限バッジに時刻が併記されます（表示用の情報で、通知のタイミングには影響しません）</li>
               <li><span className="text-slate-100">カテゴリ（プライベートのみ）</span>：7種類から選択します</li>
-              <li><span className="text-slate-100">リマインダー通知（任意・定常TODOのみ）</span>：「タスク分類」で定常TODOを選んだ場合のみ表示されます。2種類のパターンを追加できます
+              <li><span className="text-slate-100">リマインダー通知（任意・定常備忘のみ）</span>：「タスク分類」で定常備忘を選んだ場合のみ表示されます。2種類のパターンを追加できます
                 <ul className="list-disc pl-4 mt-1 space-y-1">
                   <li><span className="text-slate-100">＋毎週/隔週</span>：曜日・時刻を指定します。曜日を1つも選ばない場合は「毎日」その時刻に通知されます。「隔週にする」をONにすると起点日を指定でき、その週を基準に2週間おきの通知になります</li>
                   <li><span className="text-slate-100">＋月内の曜日</span>：「第1〜第4／最終」と曜日・時刻を指定します（例：毎月最終金曜日 18:00）。複数登録できます</li>
@@ -97,8 +97,8 @@ export default function HelpModal({ onClose }: Props) {
             <ul className="list-disc pl-4 space-y-1">
               <li>画面上部の「通知を許可する」ボタンを押すと、ブラウザのPush通知が有効になります</li>
               <li><span className="text-slate-100">iPhone（Safari）の場合</span>：共有ボタン→「ホーム画面に追加」でアプリをインストールしないとPush通知を受け取れません。未対応の場合は案内メッセージが表示されます</li>
-              <li><span className="text-slate-100">リマインダー通知</span>：定常TODOに登録した曜日・時刻（毎週/隔週、または月内の曜日）になると「📋タイトル」という通知が届きます</li>
-              <li><span className="text-slate-100">期限通知</span>：定常TODO以外で期限を設定した備忘について、<span className="text-slate-100">期限の前日・当日・超過後</span>の 8:00 / 12:00 / 18:00 / 21:00 に「明日が期限です」「本日が期限です」「期限が超過しています」という通知が届きます（1日4回まで）。超過後は<span className="text-slate-100">完了にするまで毎日届き続けます</span></li>
+              <li><span className="text-slate-100">リマインダー通知</span>：定常備忘に登録した曜日・時刻（毎週/隔週、または月内の曜日）になると「📋タイトル」という通知が届きます</li>
+              <li><span className="text-slate-100">期限通知</span>：定常備忘以外で期限を設定した備忘について、<span className="text-slate-100">期限の前日・当日・超過後</span>の 8:00 / 12:00 / 18:00 / 21:00 に「明日が期限です」「本日が期限です」「期限が超過しています」という通知が届きます（1日4回まで）。超過後は<span className="text-slate-100">完了にするまで毎日届き続けます</span>。期限に設定した時刻は表示用で、通知タイミングには影響しません</li>
             </ul>
           </Section>
 
@@ -116,8 +116,9 @@ export default function HelpModal({ onClose }: Props) {
               <li>Push通知にはブラウザ・OS側の通知許可が必要です</li>
               <li>iPhoneはホーム画面に追加（PWAインストール）しないとPush通知を受け取れません</li>
               <li>完了した備忘は「完了」タブで直近14日間のみ確認でき、それ以降は自動的に削除されます</li>
-              <li>期限通知は定常TODO以外が対象です（定常TODOには期限を設定できません）。期限超過後は完了にするまで通知が続きます</li>
-              <li>リマインダー通知は定常TODOのみ設定できます（通常備忘は期限通知でカバーするため設定欄が表示されません）</li>
+              <li>期限通知は定常備忘以外が対象です（定常備忘には期限を設定できません）。期限超過後は完了にするまで通知が続きます</li>
+              <li>リマインダー通知は定常備忘のみ設定できます（備忘は期限通知でカバーするため設定欄が表示されません）</li>
+              <li>期限の「時間」で設定した時刻は表示用の情報です。通知は日付ベースのタイミング（前日・当日・超過後）で届きます</li>
               <li>通知バッジ（アイコン・赤丸）はBadging APIに対応したブラウザ・OSでのみ表示されます</li>
             </ul>
           </Section>

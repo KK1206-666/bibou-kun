@@ -52,6 +52,7 @@ export type Todo = {
   is_completed: boolean
   reminder_settings?: ReminderSetting[]
   due_date?: string
+  due_time?: string // 'HH:MM' 形式。期限日に紐づく時刻（表示用のみで通知タイミングには使用しない）
   completed_at?: string
   sort_order: number
   created_at: string
